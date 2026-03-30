@@ -1,0 +1,12 @@
+# Ignore everything
+*
+
+# Allow git files
+!.gitignore
+!.git/
+
+# Allow prepared_data folder
+!prepared_data/
+
+# Allow everything inside prepared_data
+!prepared_data/**
