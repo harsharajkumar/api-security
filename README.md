@@ -1,240 +1,126 @@
 # 🔒 API Security Scanner
 
-An end-to-end API vulnerability detection system that combines
-a fine-tuned Code Llama 7B model with a rule-based engine to
-scan any GitHub repository for security vulnerabilities.
+An end-to-end API vulnerability detection system that combines structural code analysis, a fine-tuned **Code Llama 7B** model, and a rule-based validation engine. It is designed to scan GitHub repositories and detect both code-level logic flaws and contract-level spec violations.
+
+---
+
+## 🏗️ Architecture: The 3-Stage Audit
+
+Our approach separates vulnerability detection into three distinct, interoperable stages:
+
+1.  **Structural Discovery (`endpoint_extractor.py`)**: Uses a robust multi-mode parser (Brace-matching for C-style languages, Indentation-tracking for Python/Ruby) to map API endpoints across 10+ languages and frameworks.
+2.  **AI Inspection (`inference.py`)**: Leverages a fine-tuned Code Llama model (QLoRA) to perform deep-code analysis. It detects vulnerabilities like SQLi, IDOR, and Mass Assignment, providing both an analysis and a recommended secure implementation.
+3.  **Policy Validation (`rules_checker.py`)**: A rule-based engine that validates extracted code against custom security policies or OpenAPI specs using advanced fuzzy path matching (`/api/users/{id}` → `api/users/:param`).
+
+---
+
+## 🚀 Quick Start
+
+### 1. Install Dependencies
+```bash
+pip install streamlit gitpython requests transformers peft torch pyyaml
+```
+
+### 2. Launch the Dashboard
+```bash
+streamlit run app.py
+```
+
+### 3. CLI Alternative
+For headless environments or CI/CD pipelines:
+```bash
+python pipeline.py --repo https://github.com/user/api-repo --model_dir ./finetuned_model/final
+```
+
+---
+
+## 🖥️ Dashboard Features
+
+*   **Repository Discovery**: Search GitHub directly from the UI or paste a URL to initiate an audit.
+*   **Audit Mode Selector**:
+    *   **Quick**: Scans the first 20 endpoints.
+    *   **Standard**: Scans up to 50 endpoints.
+    *   **Comprehensive**: Audits every detected endpoint in the codebase.
+*   **Custom Rules Engine**: Upload `.jsonl` rules, `.yaml` OpenAPI specs, or even `.md` documentation to use as security test cases.
+*   **Interactive Reports**:
+    *   **Security Score**: Real-time grading based on vulnerability count and severity.
+    *   **Remediation Tabs**: View vulnerable code side-by-side with model-generated secure versions.
+    *   **Export**: Download full audit results as structured JSON reports.
+
+---
+
+## 🔍 Supported Ecosystems
+
+| Language | Supported Frameworks |
+| :--- | :--- |
+| **Python** | Flask, FastAPI, Django |
+| **JavaScript/TS** | Express.js, NestJS |
+| **Java** | Spring Boot |
+| **PHP** | Laravel |
+| **Go** | Gin, net/http |
+| **Ruby** | Ruby on Rails |
+| **C#** | ASP.NET Core |
+
+---
+
+## 📊 Dataset Insights
+
+The model was fine-tuned on a high-quality, diverse dataset of **10,000 API-specific vulnerability samples**. This dataset provides the foundation for the scanner's ability to recognize complex security patterns across multiple ecosystems.
+
+### 🌐 Language & Framework Distribution
+The training data covers a wide range of modern back-end technologies, ensuring robust cross-language performance:
+
+*   **Python (46%)**: Dominated by Flask and Django samples.
+*   **JavaScript (25%)**: Primarily focused on Express.js middleware and handlers.
+*   **Java (15%)**: Comprehensive coverage of Spring Boot REST controllers.
+*   **PHP, Go, Ruby, C# (14%)**: Targeted samples for Laravel, Gin, Rails, and ASP.NET.
+
+### 🛡️ Vulnerability Landscape
+Our dataset specifically targets the most critical API security risks (OWASP API Top 10):
+
+| Top Vulnerability Types | Count | Common CWEs |
+| :--- | :--- | :--- |
+| **SQL Injection** | 2,425 | CWE-89 |
+| **Mass Assignment** | 1,307 | CWE-915 |
+| **Path Traversal** | 943 | CWE-22 |
+| **IDOR** | 860 | CWE-639 |
+| **Broken Authorization** | 792 | CWE-285 |
+| **Command Injection** | 600 | CWE-78 |
+
+### 📈 Severity Breakdown
+*   **Critical (43%)**: Direct RCE, SQLi, or unauthorized admin access.
+*   **High (41%)**: Data leaks, IDOR, and severe authorization bypass.
+*   **Medium/None (16%)**: XSS, input validation warnings, and "Clean" baseline samples to reduce false positives.
+
+---
+
+## 🧠 Fine-Tuning & Data
+
+*   **Model**: `CodeLlama-7b-instruct-hf`
+*   **Method**: QLoRA (4-bit NF4 quantization) for efficient training on T4/16GB VRAM.
+*   **Dataset**: ~10,000 samples (synthetic + augmented) covering 19 vulnerability types (SQLi, OS Command Injection, Path Traversal, etc.).
+*   **Resilient Parsing**: The inference engine is equipped with a high-resilience parser that handles varying LLM output formats and structured JSON blocks.
 
 ---
 
 ## 📁 Project Structure
 
-```
+```text
 api_security/
-│
-├── app.py                          # Streamlit UI (main entry point)
-│
-├── endpoint_extractor.py           # Extracts API routes from repos
-├── inference.py                    # Runs fine-tuned model on endpoints
-├── rules_checker.py                # Validates endpoints against rules
-├── report_generator.py             # Generates HTML vulnerability report
-├── pipeline.py                     # CLI alternative to Streamlit
-│
-├── data_prep_universal.py          # Prepares dataset for any model
-├── finetune.py                     # Fine-tuning script (local)
-├── API_Security_Finetune.ipynb     # Fine-tuning notebook (Google Colab)
-│
-├── fix_dataset.py                  # Fixes class imbalance in dataset
-├── merge_diversevul.py             # Merges DiverseVul into dataset
-├── generate_synthetic.py           # Generates synthetic samples via Claude API
-│
-├── api_vulnerability_dataset_balanced.json   # Balanced training dataset
-├── api_vulnerability_dataset_final.json      # Final merged dataset
-├── api_rules.jsonl                           # Default security rules
-│
-└── finetuned_model/
-    └── final/                      # Saved fine-tuned model weights
+├── app.py                # Modern Streamlit Dashboard
+├── endpoint_extractor.py # Robust multi-language endpoint mapper
+├── inference.py          # Resilient model inference engine
+├── rules_checker.py      # Fuzzy-matching policy validator
+├── report_generator.py   # HTML/JSON report builder
+├── pipeline.py           # CLI audit orchestrator
+├── data.py               # Dataset preparation & normalization
+└── finetune/
+    └── finetune.py       # QLoRA training script
 ```
 
 ---
 
-## 🧠 How It Works
+## 👥 Team & Credits
 
-### Phase 1 — Fine-Tuning (done once offline)
-
-```
-Dataset (2475 samples)
-    ↓
-Code Llama 7B + QLoRA (4-bit quantization)
-    ↓
-Fine-tuned model saved to finetuned_model/final/
-```
-
-**Dataset:**
-- 2475 samples across 10 languages, 12 frameworks, 19 vulnerability types
-- Each sample has: vulnerable code, flaw labels, CWE IDs,
-  severity, description, and secure version
-- Sources: synthetic generated + augmented samples
-
-**Model:**
-- Base: `codellama/CodeLlama-7b-instruct-hf`
-- Method: QLoRA (only ~0.5% of parameters trained)
-- Task: Given a vulnerable API endpoint → output flaw type +
-  CWE + severity + description + secure version
-
----
-
-### Phase 2 — Inference Pipeline (runs on any GitHub repo)
-
-```
-GitHub Repo URL
-      ↓
-1. Endpoint Extractor   → finds all API routes in the codebase
-      ↓
-2. Fine-tuned Model     → detects code-level vulnerabilities
-      ↓
-3. Rules Checker        → validates against security rules
-      ↓
-4. Report Generator     → combined HTML/JSON vulnerability report
-```
-
----
-
-## 🚀 Running the App
-
-```bash
-# Install dependencies
-pip install streamlit gitpython requests transformers peft torch pyyaml
-
-# Run the Streamlit UI
-streamlit run app.py
-```
-
----
-
-## 🖥️ UI Features
-
-### Search Box
-- Type keywords to search GitHub repos
-- Or paste a full GitHub URL: `https://github.com/user/repo`
-- Or paste shorthand: `owner/repo`
-
-### Custom Rules Upload *(optional)*
-Upload your own API documentation or rules file:
-
-| Format     | What happens                                      |
-|------------|---------------------------------------------------|
-| `.jsonl`   | Loaded directly as rules                          |
-| `.json`    | Loaded as rules array                             |
-| `.yaml`    | Parsed as OpenAPI spec (params + auth rules)      |
-| `.md/.txt` | Scanned for security-relevant sentences           |
-
-**Fallback logic:**
-```
-Upload provided  → use uploaded rules
-No upload        → use api_rules.jsonl (default, 1370 rules)
-Neither exists   → skip rules check, run model only
-```
-
-### Scan Results
-- Summary metrics: Total / Vulnerable / Clean / Critical / High / Medium
-- Each vulnerable endpoint shows:
-  - Severity badge + CWE identifier
-  - File location + framework
-  - Tab 1: Vulnerable code
-  - Tab 2: Secure version (model-generated fix)
-  - Tab 3: Rules violations
-- Download full JSON report
-
----
-
-## 🔍 Supported Frameworks
-
-| Language         | Frameworks                    |
-|------------------|-------------------------------|
-| Python           | Flask, FastAPI, Django        |
-| JavaScript       | Express.js                    |
-| TypeScript       | NestJS                        |
-| Java             | Spring Boot                   |
-| PHP              | Laravel                       |
-| Go               | Gin, net/http                 |
-| Ruby             | Ruby on Rails                 |
-| C#               | ASP.NET Core                  |
-
----
-
-## 🛡️ Vulnerability Types Detected
-
-| Flaw                      | CWE      | Severity |
-|---------------------------|----------|----------|
-| SQL Injection             | CWE-89   | Critical |
-| OS Command Injection      | CWE-78   | Critical |
-| Code Injection            | CWE-94   | Critical |
-| Eval Injection            | CWE-95   | Critical |
-| Insecure Deserialization  | CWE-502  | Critical |
-| Missing Authentication    | CWE-306  | High     |
-| Missing Authorization     | CWE-284  | High     |
-| IDOR                      | CWE-639  | High     |
-| Path Traversal            | CWE-22   | High     |
-| Mass Assignment           | CWE-915  | High     |
-| Unrestricted File Upload  | CWE-434  | High     |
-| XSS                       | CWE-79   | Medium   |
-| CSRF                      | CWE-352  | Medium   |
-| Open Redirect             | CWE-601  | Medium   |
-| Improper Input Validation | CWE-20   | Medium   |
-| Hardcoded Credentials     | CWE-798  | Medium   |
-| Information Disclosure    | CWE-200  | Low      |
-| Improper Error Handling   | CWE-209  | Low      |
-
----
-
-## ⚙️ Fine-Tuning Details
-
-| Setting             | Value                              |
-|---------------------|------------------------------------|
-| Base Model          | CodeLlama-7b-instruct-hf           |
-| Method              | QLoRA (4-bit NF4 quantization)     |
-| LoRA Rank           | 16                                 |
-| LoRA Alpha          | 32                                 |
-| Target Modules      | q_proj, k_proj, v_proj, o_proj     |
-| Epochs              | 3 (early stopping patience=3)      |
-| Batch Size          | 4 (effective 16 with grad accum)   |
-| Learning Rate       | 2e-4                               |
-| LR Scheduler        | Cosine                             |
-| Optimizer           | paged_adamw_32bit                  |
-| GPU Required        | T4 16GB (Google Colab free tier)   |
-
----
-
-## 📊 Dataset Stats
-
-| Split | Samples |
-|-------|---------|
-| Train | 1,974   |
-| Val   | 241     |
-| Test  | 260     |
-| Total | 2,475   |
-
----
-
-## 📦 Requirements
-
-```
-torch
-transformers
-datasets
-peft
-bitsandbytes
-accelerate
-trl
-streamlit
-gitpython
-requests
-pyyaml
-anthropic        # only needed for generate_synthetic.py
-```
-
----
-
-## 🗺️ Research Question
-
-> How can we test API endpoints for security vulnerabilities
-> using rules extracted from documentation and provide
-> interpretable, actionable feedback?
-
-**Our approach:**
-Separate vulnerability detection into three stages:
-1. Structured endpoint extraction from source code
-2. Fine-tuned LLM-based vulnerability detection
-3. Rule-based spec validation
-
-This combination catches both **code-level** vulnerabilities
-(SQL injection, IDOR, etc.) and **contract-level** violations
-(missing required params, invalid enum values, missing auth).
-
----
-
-## 👥 Team
-
-Siddhanth Nilesh Jagtap · Tanuj Kenchannavar · Harsha Raj Kumar
-
-CS6380 — API Security Project
+**CS6380 — API Security Project**
+Developed by: Siddhanth Nilesh Jagtap · Tanuj Kenchannavar · Harsha Raj Kumar
