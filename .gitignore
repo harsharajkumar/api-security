@@ -10,3 +10,7 @@
 
 # Allow everything inside prepared_data
 !prepared_data/**
+
+# Allow Finetuned_API_Vuln_QLoRA_Colab_Fixed folder
+!Finetuned_API_Vuln_QLoRA_Colab_Fixed/
+!Finetuned_API_Vuln_QLoRA_Colab_Fixed/**

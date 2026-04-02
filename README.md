@@ -124,3 +124,6 @@ api_security/
 
 **CS6380 — API Security Project**
 Developed by: Siddhanth Nilesh Jagtap · Tanuj Kenchannavar · Harsha Raj Kumar
+
+## QloRA_Model Document
+https://docs.google.com/document/d/1Gr8nihhJKUCkgGdu-fUO2g-c9134bzZ7oMeGSMI-oqw/edit?usp=sharing
