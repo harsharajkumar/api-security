@@ -10,6 +10,7 @@ Usage:
 import json
 import argparse
 import re
+import os
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -25,29 +26,35 @@ SYSTEM_PROMPT = (
 
 HF_ADAPTER_REPO = "harsharajkumar273/api-security-qlora"
 
-def load_model(model_dir: str = HF_ADAPTER_REPO, base_model: str = "codellama/CodeLlama-7b-instruct-hf"):
-    """Load fine-tuned LoRA adapter + tokenizer from local path or HuggingFace Hub."""
-    import os
+LOCAL_CHECKPOINT = os.path.join(os.path.dirname(__file__), "notebooks/model_folder/checkpoint-531")
+
+def load_model(model_dir: str = None, base_model: str = "codellama/CodeLlama-7b-instruct-hf"):
+    """Load fine-tuned LoRA adapter from local checkpoint or HuggingFace Hub."""
     import torch
     from transformers import AutoTokenizer, AutoModelForCausalLM
     from peft import PeftModel
 
-    # Read base model from adapter_config if local path
+    # Prefer local checkpoint if it exists, else fall back to HF Hub adapter
+    if model_dir is None:
+        model_dir = LOCAL_CHECKPOINT if os.path.isdir(LOCAL_CHECKPOINT) else HF_ADAPTER_REPO
+
+    print(f"[INFO] Loading adapter from: {model_dir}")
+
+    # Read base model name from adapter_config.json
     adapter_cfg_path = os.path.join(model_dir, "adapter_config.json")
     if os.path.exists(adapter_cfg_path):
         with open(adapter_cfg_path) as f:
             adapter_cfg = json.load(f)
         base_model = adapter_cfg.get("base_model_name_or_path", base_model)
+    print(f"[INFO] Base model: {base_model}")
 
-    print(f"[1/3] Loading tokenizer from {model_dir}...")
+    print(f"[1/3] Loading tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(model_dir, use_fast=False)
     if tokenizer.pad_token is None:
         tokenizer.pad_token    = tokenizer.eos_token
         tokenizer.pad_token_id = tokenizer.eos_token_id
 
-    print(f"[2/3] Loading base model: {base_model}...")
-
-    # Detect device
+    print(f"[2/3] Loading base model (downloads once, then cached)...")
     if torch.cuda.is_available():
         device = "cuda"
         print(f"  Using GPU: {torch.cuda.get_device_name(0)}")
@@ -56,10 +63,9 @@ def load_model(model_dir: str = HF_ADAPTER_REPO, base_model: str = "codellama/Co
         print(f"  Using MPS (Apple Silicon)")
     else:
         device = "cpu"
-        print(f"  Using CPU (slow)")
+        print(f"  Using CPU")
 
     torch_dtype = torch.float16 if device != "cpu" else torch.float32
-
     base = AutoModelForCausalLM.from_pretrained(
         base_model,
         torch_dtype=torch_dtype,
@@ -67,11 +73,10 @@ def load_model(model_dir: str = HF_ADAPTER_REPO, base_model: str = "codellama/Co
         low_cpu_mem_usage=True,
     )
 
-    print(f"[3/3] Applying LoRA adapter from {model_dir}...")
+    print(f"[3/3] Applying LoRA adapter...")
     model = PeftModel.from_pretrained(base, model_dir)
     model.eval()
-
-    print("  Model loaded!")
+    print("  Model ready!")
     return model, tokenizer, device
 
 

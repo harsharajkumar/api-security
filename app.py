@@ -177,25 +177,20 @@ def run_full_scan(clone_url, model_dir, rules_file, max_ep, hf_token=""):
         scanned_count = len(endpoints)
         yield "extract_done", f"Found {total_discovered} endpoints. Scanning {scanned_count}.", total_discovered
 
-        # Model inference via HuggingFace API (no local download)
+        # Model inference using local checkpoint-531 (base model downloaded once & cached)
         model_used = False
         model_error = ""
-        if hf_token:
-            yield "model", "AI Analysis: Calling HuggingFace Inference API (no download needed)...", None
-            try:
-                from inference import run_inference_api
-                model_results = run_inference_api(
-                    endpoints_path=ep_file,
-                    hf_token=hf_token,
-                    output_path=model_file,
-                )
-                model_used = True
-            except Exception as me:
-                model_error = str(me)
-                yield "model_warn", f"AI model failed: {model_error}. Running rules-only scan.", None
-                model_results = [{**ep, "is_vulnerable": False, "flaws": [], "cwe": [], "severity": "unknown"} for ep in endpoints]
-        else:
-            yield "model", "No HuggingFace token — running static rules analysis only...", None
+        yield "model", "AI Analysis: Loading fine-tuned checkpoint (base model cached after first run)...", None
+        try:
+            from inference import run_inference
+            model_results = run_inference(
+                endpoints_path=ep_file,
+                output_path=model_file,
+            )
+            model_used = True
+        except Exception as me:
+            model_error = str(me)
+            yield "model_warn", f"AI model unavailable: {model_error[:150]}. Running static analysis only.", None
             model_results = [{**ep, "is_vulnerable": False, "flaws": [], "cwe": [], "severity": "unknown"} for ep in endpoints]
 
         # Rules check (static analysis — always runs)
@@ -244,18 +239,14 @@ with st.sidebar:
 
     st.divider()
     st.subheader("⚙️ Settings")
-    hf_token = st.text_input("HuggingFace Token", type="password", placeholder="hf_... (required for AI model)")
-    model_dir = st.text_input("Model Path", value="", placeholder="Leave blank → uses harsharajkumar273/api-security-qlora")
     audit_mode = st.radio("Scan Mode", ["Quick (20 Endpoints)", "Comprehensive (All)"], index=1)
     max_ep_val = 20 if "Quick" in audit_mode else 0
+    hf_token   = ""   # no longer needed — model loads from local checkpoint
+    model_dir  = ""
 
-    if hf_token:
-        st.success("Token set — AI model enabled")
-    else:
-        st.info("Enter HuggingFace token to enable AI model analysis")
-
+    st.info("Using fine-tuned checkpoint: `checkpoint-531`")
     st.divider()
-    st.caption("v2.2 — HuggingFace Edition")
+    st.caption("v2.3 — Local Checkpoint Edition")
 
 # ─────────────────────────────────────────────────────────────────
 # UI — MAIN CONTENT
