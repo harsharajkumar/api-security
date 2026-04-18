@@ -8,14 +8,14 @@ import json
 import argparse
 
 from endpoint_extractor import extract
-from inference          import run_inference
+from inference          import run_inference, HF_ADAPTER_REPO
 from rules_checker      import run_rules_check
 from report_generator   import generate_report
 
 def run_pipeline(
     repo_url:   str  = None,
     local_path: str  = None,
-    model_dir:  str  = "./finetuned_model/final",
+    model_dir:  str  = HF_ADAPTER_REPO,
     rules_file: str  = "data/api_rules.jsonl",
     output_dir: str  = "./output",
     repo_name:  str  = "Unknown Repo",
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo", help="GitHub URL")
     parser.add_argument("--local", help="Local path")
-    parser.add_argument("--model_dir", default="./finetuned_model/final")
+    parser.add_argument("--model_dir", default=HF_ADAPTER_REPO)
     parser.add_argument("--rules", default="data/api_rules.jsonl")
     parser.add_argument("--output_dir", default="./output")
     args = parser.parse_args()

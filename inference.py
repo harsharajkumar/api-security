@@ -23,14 +23,16 @@ SYSTEM_PROMPT = (
 )
 
 
-def load_model(model_dir: str, base_model: str = "codellama/CodeLlama-7b-instruct-hf"):
-    """Load fine-tuned LoRA adapter + tokenizer."""
+HF_ADAPTER_REPO = "harsharajkumar273/api-security-qlora"
+
+def load_model(model_dir: str = HF_ADAPTER_REPO, base_model: str = "codellama/CodeLlama-7b-instruct-hf"):
+    """Load fine-tuned LoRA adapter + tokenizer from local path or HuggingFace Hub."""
     import os
     import torch
     from transformers import AutoTokenizer, AutoModelForCausalLM
     from peft import PeftModel
 
-    # Read base model from adapter_config if present
+    # Read base model from adapter_config if local path
     adapter_cfg_path = os.path.join(model_dir, "adapter_config.json")
     if os.path.exists(adapter_cfg_path):
         with open(adapter_cfg_path) as f:
@@ -221,7 +223,7 @@ def analyze_endpoint(
 
 def run_inference(
     endpoints_path: str,
-    model_dir:      str,
+    model_dir:      str = HF_ADAPTER_REPO,
     output_path:    str = "model_results.json",
     base_model:     str = "codellama/CodeLlama-7b-instruct-hf",
 ) -> list:
@@ -292,8 +294,8 @@ def main():
         help="Endpoints JSON from endpoint_extractor.py"
     )
     parser.add_argument(
-        "--model_dir",  required=True,
-        help="Path to fine-tuned model directory"
+        "--model_dir",  default=HF_ADAPTER_REPO,
+        help="Path to fine-tuned model directory or HuggingFace repo ID (default: harsharajkumar273/api-security-qlora)"
     )
     parser.add_argument(
         "--output",     default="model_results.json",

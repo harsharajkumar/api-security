@@ -174,13 +174,11 @@ def run_full_scan(clone_url, model_dir, rules_file, max_ep):
 
         # Model inference
         yield "model", "Analysis: Running model inspection...", None
-        if model_dir and os.path.exists(model_dir):
-            try:
-                from inference import run_inference
-                model_results = run_inference(endpoints_path=ep_file, model_dir=model_dir, output_path=model_file)
-            except:
-                model_results = [{**ep, "is_vulnerable": False, "flaws": [], "cwe": [], "severity": "unknown"} for ep in endpoints]
-        else:
+        try:
+            from inference import run_inference, HF_ADAPTER_REPO
+            effective_model = model_dir if model_dir else HF_ADAPTER_REPO
+            model_results = run_inference(endpoints_path=ep_file, model_dir=effective_model, output_path=model_file)
+        except:
             model_results = [{**ep, "is_vulnerable": False, "flaws": [], "cwe": [], "severity": "unknown"} for ep in endpoints]
 
         # Rules check
@@ -219,7 +217,7 @@ with st.sidebar:
 
     st.divider()
     st.subheader("⚙️ Settings")
-    model_dir = st.text_input("Model Path", value="finetune/model_folder/checkpoint-531", placeholder="Optional: Code Llama path")
+    model_dir = st.text_input("Model Path", value="", placeholder="Leave blank to use harsharajkumar273/api-security-qlora (HuggingFace)")
     audit_mode = st.radio("Scan Mode", ["Quick (20 Endpoints)", "Comprehensive (All)"], index=1)
     max_ep_val = 20 if "Quick" in audit_mode else 0
     
