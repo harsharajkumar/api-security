@@ -231,11 +231,26 @@ def extract_fastapi(content: str, filepath: str, ctx: RepoContext) -> list:
 
     effective_prefixes = {**ctx.fastapi_prefixes, **local_prefixes}
 
-    for i, line in enumerate(lines):
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+
+        # Single-line decorator: @router.get("/path", ...)
         m = re.search(
-            r"@(\w+)\.(get|post|put|delete|patch|options)\(['\"]([^'\"]+)['\"]",
+            r"@(\w+)\.(get|post|put|delete|patch|options)\s*\(\s*['\"]([^'\"]+)['\"]",
             line, re.IGNORECASE,
         )
+
+        if not m:
+            # Multi-line decorator: @router.get(\n    "/path",\n    ...)
+            ml = re.search(r"@(\w+)\.(get|post|put|delete|patch|options)\s*\(", line, re.IGNORECASE)
+            if ml:
+                window = "".join(lines[i: i + 6])
+                m = re.search(
+                    r"@(\w+)\.(get|post|put|delete|patch|options)\s*\(\s*['\"]([^'\"]+)['\"]",
+                    window, re.IGNORECASE | re.DOTALL,
+                )
+
         if m:
             var_name  = m.group(1)
             method    = m.group(2).upper()
@@ -244,7 +259,7 @@ def extract_fastapi(content: str, filepath: str, ctx: RepoContext) -> list:
             full_path = normalize_path(prefix, path)
 
             fn_name = ""
-            for j in range(i + 1, min(i + 4, len(lines))):
+            for j in range(i + 1, min(i + 8, len(lines))):
                 fn_m = re.search(r"(?:async\s+)?def\s+(\w+)\s*\(", lines[j])
                 if fn_m:
                     fn_name = fn_m.group(1)
@@ -255,6 +270,8 @@ def extract_fastapi(content: str, filepath: str, ctx: RepoContext) -> list:
                 path=full_path, code=code, language="Python",
                 framework="FastAPI", function_name=fn_name,
             ))
+
+        i += 1
 
     return endpoints
 
@@ -344,6 +361,40 @@ SKIP_DIRS = {
     ".venv", "venv", "env", "dist", "build",
 }
 
+def extract_add_api_route(content: str, filepath: str, ctx: RepoContext) -> list:
+    """Handle FastAPI app.add_api_route('/path', handler, methods=['GET']) pattern."""
+    endpoints = []
+    lines = content.splitlines(keepends=True)
+
+    all_prefixes = {**ctx.fastapi_prefixes}
+    for m in re.finditer(r"(\w+)\s*=\s*APIRouter\s*\([^)]*prefix\s*=\s*['\"]([^'\"]+)['\"]", content):
+        all_prefixes[m.group(1)] = m.group(2)
+    for m in re.finditer(r"(\w+)\s*=\s*APIRouter\s*\(", content):
+        if m.group(1) not in all_prefixes:
+            all_prefixes[m.group(1)] = ""
+
+    for i, line in enumerate(lines):
+        m = re.search(
+            r"(\w+)\.add_api_route\s*\(\s*['\"]([^'\"]+)['\"]\s*,[^,)]+(?:,\s*methods\s*=\s*\[([^\]]+)\])?",
+            line, re.IGNORECASE,
+        )
+        if m:
+            var_name    = m.group(1)
+            path        = m.group(2)
+            methods_raw = m.group(3) or "'GET'"
+            methods     = re.findall(r"['\"](\w+)['\"]", methods_raw) or ["GET"]
+            prefix      = all_prefixes.get(var_name, "")
+            full_path   = normalize_path(prefix, path)
+
+            for method in methods:
+                endpoints.append(Endpoint(
+                    file=filepath, line=i + 1, method=method.upper(),
+                    path=full_path, code=line.strip(), language="Python",
+                    framework="FastAPI", function_name="",
+                ))
+    return endpoints
+
+
 def extract_from_file(filepath: str, content: str, ctx: RepoContext) -> list:
     endpoints = []
     if not filepath.endswith(".py"):
@@ -351,8 +402,9 @@ def extract_from_file(filepath: str, content: str, ctx: RepoContext) -> list:
 
     if "flask" in content.lower() or "@app.route" in content or "Blueprint" in content:
         endpoints += extract_flask(content, filepath, ctx)
-    if "fastapi" in content.lower() or "APIRouter" in content or "@router." in content:
+    if "fastapi" in content.lower() or "APIRouter" in content or "@router." in content or "add_api_route" in content:
         endpoints += extract_fastapi(content, filepath, ctx)
+        endpoints += extract_add_api_route(content, filepath, ctx)
     if filepath.endswith("urls.py") or "urlpatterns" in content:
         endpoints += extract_django(content, filepath, ctx)
 
