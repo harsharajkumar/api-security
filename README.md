@@ -106,16 +106,26 @@ Our dataset specifically targets the most critical API security risks (OWASP API
 ## 📁 Project Structure
 
 ```text
-api_security/
-├── app.py                # Modern Streamlit Dashboard
-├── endpoint_extractor.py # Robust multi-language endpoint mapper
-├── inference.py          # Resilient model inference engine
-├── rules_checker.py      # Fuzzy-matching policy validator
-├── report_generator.py   # HTML/JSON report builder
-├── pipeline.py           # CLI audit orchestrator
-├── data.py               # Dataset preparation & normalization
-└── finetune/
-    └── finetune.py       # QLoRA training script
+api-security/
+├── app.py                    # Streamlit dashboard (entry point)
+├── pipeline.py               # CLI orchestrator (entry point)
+├── endpoint_extractor.py     # Multi-language endpoint mapper
+├── inference.py              # Model inference engine
+├── rules_checker.py          # Fuzzy-matching policy validator
+├── report_generator.py       # HTML/JSON report builder
+├── data/
+│   ├── api_rules.jsonl           # Security rules dataset
+│   └── api_vulnerability_dataset_10k.json  # Training dataset
+├── finetune/
+│   ├── finetune.py           # QLoRA training script
+│   ├── data.py               # Dataset preparation & normalization
+│   └── extract_rules.py      # Rules extraction from OpenAPI/Markdown
+├── notebooks/
+│   └── API_Vuln_QLoRA_Colab_Fixed.ipynb  # Training notebook
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt          # App dependencies
+└── requirements-ml.txt       # ML/training dependencies
 ```
 
 ---

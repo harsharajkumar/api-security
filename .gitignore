@@ -3,18 +3,17 @@ __pycache__/
 *.pyc
 .venv/
 
-# Model weights (too large for git — mount via Docker volume or download separately)
+# Model weights (large binaries — store via Git LFS or external storage)
 finetune/model_folder/
+notebooks/model_folder/
+*.safetensors
+*.pt
+*.pth
+*.bin
 
-# Scan output
+# Generated output
 output/
-
-# Allow everything inside prepared_data
-!prepared_data/**
-
-# Allow Finetuned_API_Vuln_QLoRA_Colab_Fixed folder
-!Finetuned_API_Vuln_QLoRA_Colab_Fixed/
-!Finetuned_API_Vuln_QLoRA_Colab_Fixed/**
+endpoints.json
 
 # macOS
 .DS_Store

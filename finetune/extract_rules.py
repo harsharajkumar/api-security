@@ -181,7 +181,7 @@ import json
 FOLDER = "./"  
 
 # Output JSONL file
-OUTPUT_FILE = "api_rules.jsonl"
+OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "../data/api_rules.jsonl")
 
 def extract_rules_from_openapi(data, filename):
     rules = []

@@ -284,7 +284,7 @@ if st.session_state.selected_repo and not st.session_state.scan_results:
     c1, c2 = st.columns([1, 1])
     if c1.button("🚀 Start Security Audit", type="primary", use_container_width=True):
         st.session_state.is_scanning = True
-        rules_f = save_rules_to_temp(st.session_state.custom_rules, tempfile.mkdtemp()) if st.session_state.custom_rules else "api_rules.jsonl"
+        rules_f = save_rules_to_temp(st.session_state.custom_rules, tempfile.mkdtemp()) if st.session_state.custom_rules else "data/api_rules.jsonl"
         
         status_text = st.empty()
         prog = st.progress(0)

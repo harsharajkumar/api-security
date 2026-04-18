@@ -5,8 +5,8 @@ from collections import Counter, defaultdict
 
 random.seed(42)
 
-INPUT_PATH = "./api_vulnerability_dataset_10k.json"
-OUTPUT_DIR = "./prepared_data"
+INPUT_PATH = os.path.join(os.path.dirname(__file__), "../data/api_vulnerability_dataset_10k.json")
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "../prepared_data")
 MODEL = "all"   # "codellama", "starcoder", "codebert", or "all"
 TRAIN_RATIO = 0.80
 VAL_RATIO = 0.10

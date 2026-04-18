@@ -16,7 +16,7 @@ def run_pipeline(
     repo_url:   str  = None,
     local_path: str  = None,
     model_dir:  str  = "./finetuned_model/final",
-    rules_file: str  = "api_rules.jsonl",
+    rules_file: str  = "data/api_rules.jsonl",
     output_dir: str  = "./output",
     repo_name:  str  = "Unknown Repo",
 ):
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     parser.add_argument("--repo", help="GitHub URL")
     parser.add_argument("--local", help="Local path")
     parser.add_argument("--model_dir", default="./finetuned_model/final")
-    parser.add_argument("--rules", default="api_rules.jsonl")
+    parser.add_argument("--rules", default="data/api_rules.jsonl")
     parser.add_argument("--output_dir", default="./output")
     args = parser.parse_args()
 

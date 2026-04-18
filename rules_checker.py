@@ -240,7 +240,7 @@ def run_rules_check(ep_path, r_path, out_path="rules_results.json"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--endpoints", default="endpoints.json")
-    parser.add_argument("--rules", default="api_rules.jsonl")
+    parser.add_argument("--rules", default="data/api_rules.jsonl")
     parser.add_argument("--output", default="rules_results.json")
     args = parser.parse_args()
     run_rules_check(args.endpoints, args.rules, args.output)
