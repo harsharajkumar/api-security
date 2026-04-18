@@ -15,7 +15,7 @@ Our approach separates vulnerability detection into four distinct, interoperable
 
 ---
 
-## 🗺️ System Design
+## System Design
 
 ### Overview
 
