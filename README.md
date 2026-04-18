@@ -4,13 +4,98 @@ An end-to-end API vulnerability detection system that combines structural code a
 
 ---
 
-## 🏗️ Architecture: The 3-Stage Audit
+## 🏗️ Architecture: The 4-Stage Audit
 
-Our approach separates vulnerability detection into three distinct, interoperable stages:
+Our approach separates vulnerability detection into four distinct, interoperable stages:
 
 1.  **Structural Discovery (`endpoint_extractor.py`)**: Uses a robust multi-mode parser (Brace-matching for C-style languages, Indentation-tracking for Python/Ruby) to map API endpoints across 10+ languages and frameworks.
 2.  **AI Inspection (`inference.py`)**: Leverages a fine-tuned Code Llama model (QLoRA) to perform deep-code analysis. It detects vulnerabilities like SQLi, IDOR, and Mass Assignment, providing both an analysis and a recommended secure implementation.
 3.  **Policy Validation (`rules_checker.py`)**: A rule-based engine that validates extracted code against custom security policies or OpenAPI specs using advanced fuzzy path matching (`/api/users/{id}` → `api/users/:param`).
+4.  **Report Generation (`report_generator.py`)**: Merges AI and rules results, computes a security score by severity weight, and produces an interactive HTML report.
+
+---
+
+## 🗺️ System Design
+
+```mermaid
+flowchart TD
+    subgraph INPUT["Input Sources"]
+        A1[GitHub URL]
+        A2[Local Path]
+    end
+
+    subgraph ENTRY["Entry Points"]
+        B1[app.py\nStreamlit Dashboard]
+        B2[pipeline.py\nCLI Orchestrator]
+    end
+
+    subgraph STAGE1["Stage 1 — Endpoint Extraction\nendpoint_extractor.py"]
+        C1[Git Clone / Local Walk]
+        C2[Pre-scan Phase\nCollect router & blueprint prefixes]
+        C3[Flask Extractor\n@app.route / @bp.route]
+        C4[FastAPI Extractor\n@router.get/post + multi-line decorators\nadd_api_route support]
+        C5[Django Extractor\nurlpatterns / router.register]
+        C6[Deduplicate\nby file+line+method]
+        C7[(endpoints.json)]
+    end
+
+    subgraph STAGE2["Stage 2 — AI Inference\ninference.py"]
+        D1{Model Source}
+        D2[Local Checkpoint\nnotebooks/model_folder/checkpoint-531]
+        D3[HuggingFace Hub\nharsharajkumar273/api-security-qlora]
+        D4[Base Model\nCodeLlama-7b-instruct-hf]
+        D5[LoRA Adapter\nQLoRA 4-bit NF4]
+        D6[Build Prompt\nINST format with\nmethod + path + code]
+        D7[Model Generate\nmax 400 new tokens]
+        D8[Parse Response\nSeverity / Flaws / CWE\nDescription / Secure Version]
+        D9[(model_results.json)]
+    end
+
+    subgraph STAGE3["Stage 3 — Rules Checker\nrules_checker.py"]
+        E1[Load api_rules.jsonl\nFuzzy path matching]
+        E2[Static Pattern Matching\nSQL Injection · Command Injection\nPath Traversal · SSRF · IDOR\nInsecure JWT · Hardcoded Secret\nInsecure Deserialization · XSS]
+        E3[Config File Scanner\nsettings.py / config.py\nHardcoded secrets only]
+        E4[Custom Rule Engine\nMissing Auth · Missing Security Params]
+        E5[(rules_results.json)]
+    end
+
+    subgraph STAGE4["Stage 4 — Report Generator\nreport_generator.py"]
+        F1[Merge Model + Rules Results]
+        F2[Compute Security Score\nby severity weights]
+        F3[(report.html)]
+    end
+
+    subgraph FINETUNE["Fine-Tuning Pipeline\nfinetune/"]
+        G1[(api_vulnerability_dataset_10k.json\n10,000 samples · 19 vuln types)]
+        G2[data.py\nDataset Prep & Normalization]
+        G3[finetune.py\nQLoRA Training\nrank=16 · alpha=32\ntarget: q/k/v/o_proj]
+        G4[API_Vuln_QLoRA_Colab_Fixed.ipynb\nGoogle Colab T4 GPU]
+        G5[merge_and_upload.py\nMerge LoRA → Base\nUpload to HF Hub]
+        G6[(harsharajkumar273/\napi-security-qlora\nHuggingFace Hub)]
+    end
+
+    A1 & A2 --> B1 & B2
+    B1 & B2 --> C1
+    C1 --> C2
+    C2 --> C3 & C4 & C5
+    C3 & C4 & C5 --> C6 --> C7
+
+    C7 --> D6
+    D1 -->|exists locally| D2
+    D1 -->|fallback| D3
+    D2 & D3 --> D5
+    D4 --> D5
+    D5 --> D6 --> D7 --> D8 --> D9
+
+    C7 --> E1 & E2 & E3 & E4
+    E1 & E2 & E3 & E4 --> E5
+
+    D9 & E5 --> F1 --> F2 --> F3
+
+    G1 --> G2 --> G3
+    G4 --> G3 --> G5 --> G6
+    G6 -.->|adapter loaded at runtime| D3
+```
 
 ---
 
