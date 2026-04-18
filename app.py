@@ -148,21 +148,25 @@ def save_rules_to_temp(rules: list, tmp_dir: str) -> str:
 # PIPELINE
 # ─────────────────────────────────────────────────────────────────
 
-def run_full_scan(clone_url, model_dir, rules_file, max_ep):
+def run_full_scan(clone_url, model_dir, rules_file, max_ep, hf_token=""):
     tmp = tempfile.mkdtemp(prefix="api_sec_")
-    ep_file = os.path.join(tmp, "endpoints.json")
+    ep_file    = os.path.join(tmp, "endpoints.json")
     model_file = os.path.join(tmp, "model_results.json")
-    rules_out = os.path.join(tmp, "rules_results.json")
+    rules_out  = os.path.join(tmp, "rules_results.json")
+
+    if hf_token:
+        os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
+        os.environ["HF_TOKEN"] = hf_token
 
     try:
         from endpoint_extractor import extract
         from rules_checker import run_rules_check
 
-        yield "extract", "Discovery: Scanning Python source code...", None
+        yield "extract", "Discovery: Scanning repository source code...", None
         endpoints = extract(repo_url=clone_url, output=ep_file)
 
         if not endpoints:
-            yield "error", "No Python API endpoints found.", None
+            yield "error", "No Python API endpoints found in this repository.", None
             return
 
         total_discovered = len(endpoints)
@@ -170,35 +174,58 @@ def run_full_scan(clone_url, model_dir, rules_file, max_ep):
             endpoints = endpoints[:max_ep]
             with open(ep_file, "w") as f: json.dump(endpoints, f)
 
-        yield "extract_done", f"Found {total_discovered} Python endpoints.", total_discovered
+        scanned_count = len(endpoints)
+        yield "extract_done", f"Found {total_discovered} endpoints. Scanning {scanned_count}.", total_discovered
 
-        # Model inference
-        yield "model", "Analysis: Running model inspection...", None
-        try:
-            from inference import run_inference, HF_ADAPTER_REPO
-            effective_model = model_dir if model_dir else HF_ADAPTER_REPO
-            model_results = run_inference(endpoints_path=ep_file, model_dir=effective_model, output_path=model_file)
-        except:
+        # Model inference via HuggingFace API (no local download)
+        model_used = False
+        model_error = ""
+        if hf_token:
+            yield "model", "AI Analysis: Calling HuggingFace Inference API (no download needed)...", None
+            try:
+                from inference import run_inference_api
+                model_results = run_inference_api(
+                    endpoints_path=ep_file,
+                    hf_token=hf_token,
+                    output_path=model_file,
+                )
+                model_used = True
+            except Exception as me:
+                model_error = str(me)
+                yield "model_warn", f"AI model failed: {model_error}. Running rules-only scan.", None
+                model_results = [{**ep, "is_vulnerable": False, "flaws": [], "cwe": [], "severity": "unknown"} for ep in endpoints]
+        else:
+            yield "model", "No HuggingFace token — running static rules analysis only...", None
             model_results = [{**ep, "is_vulnerable": False, "flaws": [], "cwe": [], "severity": "unknown"} for ep in endpoints]
 
-        # Rules check
-        yield "rules", "Validation: Checking security policies...", None
+        # Rules check (static analysis — always runs)
+        yield "rules", "Validation: Running static analysis and security policy checks...", None
         rules_results = run_rules_check(ep_file, rules_file, rules_out)
 
-        # Merge
+        # Merge model + rules results
         rules_index = {(str(r.get("method", "")), str(r.get("path", ""))): r for r in rules_results}
         merged = []
         for m in model_results:
             key = (str(m.get("method", "")), str(m.get("path", "")))
-            rv = rules_index.get(key, {}).get("violations", [])
-            merged.append({**m, "rules_violations": rv, "is_vulnerable": m.get("is_vulnerable") or len(rv) > 0})
+            rr  = rules_index.get(key, {})
+            rv  = rr.get("violations", [])
+            merged.append({
+                **m,
+                "rules_violations": rv,
+                "is_vulnerable": m.get("is_vulnerable") or len(rv) > 0,
+            })
 
         yield "done", "Scan complete!", {
-            "results": merged,
+            "results":          merged,
             "total_discovered": total_discovered,
+            "scanned_count":    scanned_count,
+            "model_used":       model_used,
+            "model_error":      model_error,
         }
-    except Exception as e: yield "error", str(e), None
-    finally: shutil.rmtree(tmp, ignore_errors=True)
+    except Exception as e:
+        yield "error", f"Scan failed: {e}", None
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 # ─────────────────────────────────────────────────────────────────
 # UI — SIDEBAR
@@ -217,12 +244,18 @@ with st.sidebar:
 
     st.divider()
     st.subheader("⚙️ Settings")
-    model_dir = st.text_input("Model Path", value="", placeholder="Leave blank to use harsharajkumar273/api-security-qlora (HuggingFace)")
+    hf_token = st.text_input("HuggingFace Token", type="password", placeholder="hf_... (required for AI model)")
+    model_dir = st.text_input("Model Path", value="", placeholder="Leave blank → uses harsharajkumar273/api-security-qlora")
     audit_mode = st.radio("Scan Mode", ["Quick (20 Endpoints)", "Comprehensive (All)"], index=1)
     max_ep_val = 20 if "Quick" in audit_mode else 0
-    
+
+    if hf_token:
+        st.success("Token set — AI model enabled")
+    else:
+        st.info("Enter HuggingFace token to enable AI model analysis")
+
     st.divider()
-    st.caption("v2.1 — Refined Edition")
+    st.caption("v2.2 — HuggingFace Edition")
 
 # ─────────────────────────────────────────────────────────────────
 # UI — MAIN CONTENT
@@ -287,17 +320,24 @@ if st.session_state.selected_repo and not st.session_state.scan_results:
         status_text = st.empty()
         prog = st.progress(0)
         
-        for ev, msg, data in run_full_scan(repo["clone_url"], model_dir, rules_f, max_ep_val):
-            status_text.info(msg)
+        for ev, msg, data in run_full_scan(repo["clone_url"], model_dir, rules_f, max_ep_val, hf_token):
+            if ev == "model_warn":
+                status_text.warning(msg)
+            else:
+                status_text.info(msg)
             if ev == "extract_done": prog.progress(30)
-            elif ev == "model": prog.progress(50)
-            elif ev == "rules": prog.progress(85)
+            elif ev == "model":      prog.progress(50)
+            elif ev == "rules":      prog.progress(85)
             elif ev == "done":
+                prog.progress(100)
                 st.session_state.scan_results = {
-                    "repo": repo["full_name"],
-                    "results": data["results"],
+                    "repo":             repo["full_name"],
+                    "results":          data["results"],
                     "total_discovered": data["total_discovered"],
-                    "timestamp": datetime.now().isoformat()
+                    "scanned_count":    data["scanned_count"],
+                    "model_used":       data["model_used"],
+                    "model_error":      data["model_error"],
+                    "timestamp":        datetime.now().isoformat(),
                 }
                 st.session_state.is_scanning = False
                 st.rerun()
@@ -329,14 +369,17 @@ if st.session_state.scan_results:
     score = max(0, score)
 
     st.header(f"Audit Report: {data['repo']}")
-    
-    if not model_dir:
-        st.warning("⚠️ **Note:** No AI model path provided. Results are based on static rule-matching only.")
 
-    # High-level metrics with more padding
+    if data.get("model_used"):
+        st.success("AI model analysis completed via HuggingFace Inference API.")
+    elif data.get("model_error"):
+        st.warning(f"AI model unavailable — results based on static analysis only. ({data['model_error'][:120]})")
+    else:
+        st.info("Static analysis only — enter a HuggingFace token in the sidebar to enable AI model analysis.")
+
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Endpoints", data["total_discovered"])
-    m2.metric("Scanned", len(res))
+    m1.metric("Discovered", data["total_discovered"])
+    m2.metric("Scanned", data.get("scanned_count", len(res)))
     
     score_color = "normal"
     if score < 70: score_color = "inverse"

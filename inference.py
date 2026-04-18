@@ -282,7 +282,91 @@ def run_inference(
 
 
 # ─────────────────────────────────────────────────────────────────
-# 5. MAIN
+# 5. HF INFERENCE API (no local download)
+# ─────────────────────────────────────────────────────────────────
+
+# Models tried in order — first available wins
+_API_MODELS = [
+    "Qwen/Qwen2.5-Coder-7B-Instruct",
+    "deepseek-ai/deepseek-coder-6.7b-instruct",
+    "bigcode/starcoder2-15b",
+]
+
+def _endpoint_stub(endpoint: dict, error: str = "") -> dict:
+    return {
+        "file": endpoint.get("file"), "line": endpoint.get("line"),
+        "method": endpoint.get("method"), "path": endpoint.get("path"),
+        "language": endpoint.get("language"), "framework": endpoint.get("framework"),
+        "code": endpoint.get("code"), "is_vulnerable": False,
+        "flaws": [], "cwe": [], "severity": "unknown",
+        "vulnerability_description": "", "secure_version": "",
+        "error": error,
+    }
+
+def run_inference_api(
+    endpoints_path: str,
+    hf_token:       str,
+    output_path:    str = "model_results.json",
+) -> list:
+    """Run inference via HuggingFace Inference API — no local model download."""
+    from huggingface_hub import InferenceClient
+
+    with open(endpoints_path) as f:
+        endpoints = json.load(f)
+
+    client = None
+    chosen_model = None
+    for model_id in _API_MODELS:
+        try:
+            c = InferenceClient(model=model_id, token=hf_token)
+            # Quick health check
+            c.text_generation("hi", max_new_tokens=1)
+            client = c
+            chosen_model = model_id
+            print(f"[API] Using model: {model_id}")
+            break
+        except Exception:
+            continue
+
+    if client is None:
+        raise RuntimeError("No HuggingFace Inference API model available. Check your token or try again later.")
+
+    results = []
+    for i, endpoint in enumerate(endpoints):
+        print(f"  [{i+1}/{len(endpoints)}] {endpoint.get('method')} {endpoint.get('path')}")
+        try:
+            prompt = build_prompt(endpoint)
+            raw = client.text_generation(
+                prompt,
+                max_new_tokens=450,
+                temperature=0.1,
+                do_sample=True,
+                stop_sequences=["</s>", "[INST]"],
+            )
+            result = parse_response(raw)
+            result.update({
+                "file": endpoint.get("file"), "line": endpoint.get("line"),
+                "method": endpoint.get("method"), "path": endpoint.get("path"),
+                "language": endpoint.get("language"), "framework": endpoint.get("framework"),
+                "code": endpoint.get("code"), "model_used": chosen_model,
+            })
+            results.append(result)
+            status = "VULNERABLE" if result["is_vulnerable"] else "CLEAN"
+            print(f"    → {status}  {result.get('severity','')}  {', '.join(result.get('flaws',[]))}")
+        except Exception as e:
+            print(f"    → ERROR: {e}")
+            results.append(_endpoint_stub(endpoint, str(e)))
+
+    with open(output_path, "w") as f:
+        json.dump(results, f, indent=2)
+
+    vuln_count = sum(1 for r in results if r.get("is_vulnerable"))
+    print(f"\n[OK] API inference complete — {vuln_count}/{len(results)} vulnerable")
+    return results
+
+
+# ─────────────────────────────────────────────────────────────────
+# 6. MAIN
 # ─────────────────────────────────────────────────────────────────
 
 def main():
