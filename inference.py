@@ -285,11 +285,13 @@ def run_inference(
 # 5. HF INFERENCE API (no local download)
 # ─────────────────────────────────────────────────────────────────
 
-# Models tried in order — first available wins
+# Models tried in order — first available wins.
+# Once merge_and_upload.py has been run, the merged model is tried first.
 _API_MODELS = [
-    "Qwen/Qwen2.5-Coder-7B-Instruct",
-    "deepseek-ai/deepseek-coder-6.7b-instruct",
-    "bigcode/starcoder2-15b",
+    "harsharajkumar273/api-security-qlora-merged",  # fine-tuned (after merge_and_upload.py)
+    "Qwen/Qwen2.5-Coder-7B-Instruct",              # fallback
+    "deepseek-ai/deepseek-coder-6.7b-instruct",    # fallback
+    "bigcode/starcoder2-15b",                       # fallback
 ]
 
 def _endpoint_stub(endpoint: dict, error: str = "") -> dict:
