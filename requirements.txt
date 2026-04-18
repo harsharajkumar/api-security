@@ -1,0 +1,8 @@
+# Core — needed to run the API checker
+streamlit>=1.30.0
+gitpython>=3.1.0
+requests>=2.31.0
+pyyaml>=6.0.1
+
+# Optional — only needed if you use the ML model inference
+# pip install -r requirements-ml.txt

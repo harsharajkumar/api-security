@@ -1,0 +1,12 @@
+services:
+  api-scanner:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      # Mount model folder so you don't have to bake it into the image
+      - ./finetune/model_folder:/app/finetune/model_folder:ro
+      # Mount output so scan results persist on your machine
+      - ./output:/app/output
+    environment:
+      - PYTHONUNBUFFERED=1

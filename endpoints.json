@@ -1,0 +1,312 @@
+[
+  {
+    "file": "app/routes/index.js",
+    "line": 30,
+    "method": "GET",
+    "path": "/",
+    "code": "app.get(\"/\", sessionHandler.displayWelcomePage);\n\n    // Login form\n    app.get(\"/login\", sessionHandler.displayLoginPage);\n    app.post(\"/login\", sessionHandler.handleLoginRequest);\n\n    // Signup form\n    app.get(\"/signup\", sessionHandler.displaySignupPage);\n    app.post(\"/signup\", sessionHandler.handleSignup);\n\n    // Logout page\n    app.get(\"/logout\", sessionHandler.displayLogoutPage);\n\n    // The main page of the app\n    app.get(\"/dashboard\", isLoggedIn, sessionHandler.displayWelcomePage);\n\n    // Profile page\n    app.get(\"/profile\", isLoggedIn, profileHandler.displayProfile);\n    app.post(\"/profile\", isLoggedIn, profileHandler.handleProfileUpdate);\n\n    // Contributions Page\n    app.get(\"/contributions\", isLoggedIn, contributionsHandler.displayContributions);\n    app.post(\"/contributions\", isLoggedIn, contributionsHandler.handleContributionsUpdate);\n\n    // Benefits Page\n    app.get(\"/benefits\", isLoggedIn, benefitsHandler.displayBenefits);\n    app.post(\"/benefits\", isLoggedIn, benefitsHandler.updateBenefits);\n    /* Fix for A7 - checks user role to implement  Function Level Access Control\n     app.get(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.displayBenefits);\n     app.post(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.updateBenefits);\n     */\n\n    // Allocations Page\n    app.get(\"/allocations/:userId\", isLoggedIn, allocationsHandler.displayAllocations);\n\n    // Memos Page\n    app.get(\"/memos\", isLoggedIn, memosHandler.displayMemos);\n    app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "sessionHandler"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 33,
+    "method": "GET",
+    "path": "/login",
+    "code": "app.get(\"/login\", sessionHandler.displayLoginPage);\n    app.post(\"/login\", sessionHandler.handleLoginRequest);\n\n    // Signup form\n    app.get(\"/signup\", sessionHandler.displaySignupPage);\n    app.post(\"/signup\", sessionHandler.handleSignup);\n\n    // Logout page\n    app.get(\"/logout\", sessionHandler.displayLogoutPage);\n\n    // The main page of the app\n    app.get(\"/dashboard\", isLoggedIn, sessionHandler.displayWelcomePage);\n\n    // Profile page\n    app.get(\"/profile\", isLoggedIn, profileHandler.displayProfile);\n    app.post(\"/profile\", isLoggedIn, profileHandler.handleProfileUpdate);\n\n    // Contributions Page\n    app.get(\"/contributions\", isLoggedIn, contributionsHandler.displayContributions);\n    app.post(\"/contributions\", isLoggedIn, contributionsHandler.handleContributionsUpdate);\n\n    // Benefits Page\n    app.get(\"/benefits\", isLoggedIn, benefitsHandler.displayBenefits);\n    app.post(\"/benefits\", isLoggedIn, benefitsHandler.updateBenefits);\n    /* Fix for A7 - checks user role to implement  Function Level Access Control\n     app.get(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.displayBenefits);\n     app.post(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.updateBenefits);\n     */\n\n    // Allocations Page\n    app.get(\"/allocations/:userId\", isLoggedIn, allocationsHandler.displayAllocations);\n\n    // Memos Page\n    app.get(\"/memos\", isLoggedIn, memosHandler.displayMemos);\n    app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "sessionHandler"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 34,
+    "method": "POST",
+    "path": "/login",
+    "code": "app.post(\"/login\", sessionHandler.handleLoginRequest);\n\n    // Signup form\n    app.get(\"/signup\", sessionHandler.displaySignupPage);\n    app.post(\"/signup\", sessionHandler.handleSignup);\n\n    // Logout page\n    app.get(\"/logout\", sessionHandler.displayLogoutPage);\n\n    // The main page of the app\n    app.get(\"/dashboard\", isLoggedIn, sessionHandler.displayWelcomePage);\n\n    // Profile page\n    app.get(\"/profile\", isLoggedIn, profileHandler.displayProfile);\n    app.post(\"/profile\", isLoggedIn, profileHandler.handleProfileUpdate);\n\n    // Contributions Page\n    app.get(\"/contributions\", isLoggedIn, contributionsHandler.displayContributions);\n    app.post(\"/contributions\", isLoggedIn, contributionsHandler.handleContributionsUpdate);\n\n    // Benefits Page\n    app.get(\"/benefits\", isLoggedIn, benefitsHandler.displayBenefits);\n    app.post(\"/benefits\", isLoggedIn, benefitsHandler.updateBenefits);\n    /* Fix for A7 - checks user role to implement  Function Level Access Control\n     app.get(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.displayBenefits);\n     app.post(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.updateBenefits);\n     */\n\n    // Allocations Page\n    app.get(\"/allocations/:userId\", isLoggedIn, allocationsHandler.displayAllocations);\n\n    // Memos Page\n    app.get(\"/memos\", isLoggedIn, memosHandler.displayMemos);\n    app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "sessionHandler"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 37,
+    "method": "GET",
+    "path": "/signup",
+    "code": "app.get(\"/signup\", sessionHandler.displaySignupPage);\n    app.post(\"/signup\", sessionHandler.handleSignup);\n\n    // Logout page\n    app.get(\"/logout\", sessionHandler.displayLogoutPage);\n\n    // The main page of the app\n    app.get(\"/dashboard\", isLoggedIn, sessionHandler.displayWelcomePage);\n\n    // Profile page\n    app.get(\"/profile\", isLoggedIn, profileHandler.displayProfile);\n    app.post(\"/profile\", isLoggedIn, profileHandler.handleProfileUpdate);\n\n    // Contributions Page\n    app.get(\"/contributions\", isLoggedIn, contributionsHandler.displayContributions);\n    app.post(\"/contributions\", isLoggedIn, contributionsHandler.handleContributionsUpdate);\n\n    // Benefits Page\n    app.get(\"/benefits\", isLoggedIn, benefitsHandler.displayBenefits);\n    app.post(\"/benefits\", isLoggedIn, benefitsHandler.updateBenefits);\n    /* Fix for A7 - checks user role to implement  Function Level Access Control\n     app.get(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.displayBenefits);\n     app.post(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.updateBenefits);\n     */\n\n    // Allocations Page\n    app.get(\"/allocations/:userId\", isLoggedIn, allocationsHandler.displayAllocations);\n\n    // Memos Page\n    app.get(\"/memos\", isLoggedIn, memosHandler.displayMemos);\n    app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "sessionHandler"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 38,
+    "method": "POST",
+    "path": "/signup",
+    "code": "app.post(\"/signup\", sessionHandler.handleSignup);\n\n    // Logout page\n    app.get(\"/logout\", sessionHandler.displayLogoutPage);\n\n    // The main page of the app\n    app.get(\"/dashboard\", isLoggedIn, sessionHandler.displayWelcomePage);\n\n    // Profile page\n    app.get(\"/profile\", isLoggedIn, profileHandler.displayProfile);\n    app.post(\"/profile\", isLoggedIn, profileHandler.handleProfileUpdate);\n\n    // Contributions Page\n    app.get(\"/contributions\", isLoggedIn, contributionsHandler.displayContributions);\n    app.post(\"/contributions\", isLoggedIn, contributionsHandler.handleContributionsUpdate);\n\n    // Benefits Page\n    app.get(\"/benefits\", isLoggedIn, benefitsHandler.displayBenefits);\n    app.post(\"/benefits\", isLoggedIn, benefitsHandler.updateBenefits);\n    /* Fix for A7 - checks user role to implement  Function Level Access Control\n     app.get(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.displayBenefits);\n     app.post(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.updateBenefits);\n     */\n\n    // Allocations Page\n    app.get(\"/allocations/:userId\", isLoggedIn, allocationsHandler.displayAllocations);\n\n    // Memos Page\n    app.get(\"/memos\", isLoggedIn, memosHandler.displayMemos);\n    app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "sessionHandler"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 41,
+    "method": "GET",
+    "path": "/logout",
+    "code": "app.get(\"/logout\", sessionHandler.displayLogoutPage);\n\n    // The main page of the app\n    app.get(\"/dashboard\", isLoggedIn, sessionHandler.displayWelcomePage);\n\n    // Profile page\n    app.get(\"/profile\", isLoggedIn, profileHandler.displayProfile);\n    app.post(\"/profile\", isLoggedIn, profileHandler.handleProfileUpdate);\n\n    // Contributions Page\n    app.get(\"/contributions\", isLoggedIn, contributionsHandler.displayContributions);\n    app.post(\"/contributions\", isLoggedIn, contributionsHandler.handleContributionsUpdate);\n\n    // Benefits Page\n    app.get(\"/benefits\", isLoggedIn, benefitsHandler.displayBenefits);\n    app.post(\"/benefits\", isLoggedIn, benefitsHandler.updateBenefits);\n    /* Fix for A7 - checks user role to implement  Function Level Access Control\n     app.get(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.displayBenefits);\n     app.post(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.updateBenefits);\n     */\n\n    // Allocations Page\n    app.get(\"/allocations/:userId\", isLoggedIn, allocationsHandler.displayAllocations);\n\n    // Memos Page\n    app.get(\"/memos\", isLoggedIn, memosHandler.displayMemos);\n    app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "sessionHandler"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 44,
+    "method": "GET",
+    "path": "/dashboard",
+    "code": "app.get(\"/dashboard\", isLoggedIn, sessionHandler.displayWelcomePage);\n\n    // Profile page\n    app.get(\"/profile\", isLoggedIn, profileHandler.displayProfile);\n    app.post(\"/profile\", isLoggedIn, profileHandler.handleProfileUpdate);\n\n    // Contributions Page\n    app.get(\"/contributions\", isLoggedIn, contributionsHandler.displayContributions);\n    app.post(\"/contributions\", isLoggedIn, contributionsHandler.handleContributionsUpdate);\n\n    // Benefits Page\n    app.get(\"/benefits\", isLoggedIn, benefitsHandler.displayBenefits);\n    app.post(\"/benefits\", isLoggedIn, benefitsHandler.updateBenefits);\n    /* Fix for A7 - checks user role to implement  Function Level Access Control\n     app.get(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.displayBenefits);\n     app.post(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.updateBenefits);\n     */\n\n    // Allocations Page\n    app.get(\"/allocations/:userId\", isLoggedIn, allocationsHandler.displayAllocations);\n\n    // Memos Page\n    app.get(\"/memos\", isLoggedIn, memosHandler.displayMemos);\n    app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "isLoggedIn"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 47,
+    "method": "GET",
+    "path": "/profile",
+    "code": "app.get(\"/profile\", isLoggedIn, profileHandler.displayProfile);\n    app.post(\"/profile\", isLoggedIn, profileHandler.handleProfileUpdate);\n\n    // Contributions Page\n    app.get(\"/contributions\", isLoggedIn, contributionsHandler.displayContributions);\n    app.post(\"/contributions\", isLoggedIn, contributionsHandler.handleContributionsUpdate);\n\n    // Benefits Page\n    app.get(\"/benefits\", isLoggedIn, benefitsHandler.displayBenefits);\n    app.post(\"/benefits\", isLoggedIn, benefitsHandler.updateBenefits);\n    /* Fix for A7 - checks user role to implement  Function Level Access Control\n     app.get(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.displayBenefits);\n     app.post(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.updateBenefits);\n     */\n\n    // Allocations Page\n    app.get(\"/allocations/:userId\", isLoggedIn, allocationsHandler.displayAllocations);\n\n    // Memos Page\n    app.get(\"/memos\", isLoggedIn, memosHandler.displayMemos);\n    app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "isLoggedIn"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 48,
+    "method": "POST",
+    "path": "/profile",
+    "code": "app.post(\"/profile\", isLoggedIn, profileHandler.handleProfileUpdate);\n\n    // Contributions Page\n    app.get(\"/contributions\", isLoggedIn, contributionsHandler.displayContributions);\n    app.post(\"/contributions\", isLoggedIn, contributionsHandler.handleContributionsUpdate);\n\n    // Benefits Page\n    app.get(\"/benefits\", isLoggedIn, benefitsHandler.displayBenefits);\n    app.post(\"/benefits\", isLoggedIn, benefitsHandler.updateBenefits);\n    /* Fix for A7 - checks user role to implement  Function Level Access Control\n     app.get(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.displayBenefits);\n     app.post(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.updateBenefits);\n     */\n\n    // Allocations Page\n    app.get(\"/allocations/:userId\", isLoggedIn, allocationsHandler.displayAllocations);\n\n    // Memos Page\n    app.get(\"/memos\", isLoggedIn, memosHandler.displayMemos);\n    app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "isLoggedIn"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 51,
+    "method": "GET",
+    "path": "/contributions",
+    "code": "app.get(\"/contributions\", isLoggedIn, contributionsHandler.displayContributions);\n    app.post(\"/contributions\", isLoggedIn, contributionsHandler.handleContributionsUpdate);\n\n    // Benefits Page\n    app.get(\"/benefits\", isLoggedIn, benefitsHandler.displayBenefits);\n    app.post(\"/benefits\", isLoggedIn, benefitsHandler.updateBenefits);\n    /* Fix for A7 - checks user role to implement  Function Level Access Control\n     app.get(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.displayBenefits);\n     app.post(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.updateBenefits);\n     */\n\n    // Allocations Page\n    app.get(\"/allocations/:userId\", isLoggedIn, allocationsHandler.displayAllocations);\n\n    // Memos Page\n    app.get(\"/memos\", isLoggedIn, memosHandler.displayMemos);\n    app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "isLoggedIn"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 52,
+    "method": "POST",
+    "path": "/contributions",
+    "code": "app.post(\"/contributions\", isLoggedIn, contributionsHandler.handleContributionsUpdate);\n\n    // Benefits Page\n    app.get(\"/benefits\", isLoggedIn, benefitsHandler.displayBenefits);\n    app.post(\"/benefits\", isLoggedIn, benefitsHandler.updateBenefits);\n    /* Fix for A7 - checks user role to implement  Function Level Access Control\n     app.get(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.displayBenefits);\n     app.post(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.updateBenefits);\n     */\n\n    // Allocations Page\n    app.get(\"/allocations/:userId\", isLoggedIn, allocationsHandler.displayAllocations);\n\n    // Memos Page\n    app.get(\"/memos\", isLoggedIn, memosHandler.displayMemos);\n    app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "isLoggedIn"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 55,
+    "method": "GET",
+    "path": "/benefits",
+    "code": "app.get(\"/benefits\", isLoggedIn, benefitsHandler.displayBenefits);\n    app.post(\"/benefits\", isLoggedIn, benefitsHandler.updateBenefits);\n    /* Fix for A7 - checks user role to implement  Function Level Access Control\n     app.get(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.displayBenefits);\n     app.post(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.updateBenefits);\n     */\n\n    // Allocations Page\n    app.get(\"/allocations/:userId\", isLoggedIn, allocationsHandler.displayAllocations);\n\n    // Memos Page\n    app.get(\"/memos\", isLoggedIn, memosHandler.displayMemos);\n    app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "isLoggedIn"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 56,
+    "method": "POST",
+    "path": "/benefits",
+    "code": "app.post(\"/benefits\", isLoggedIn, benefitsHandler.updateBenefits);\n    /* Fix for A7 - checks user role to implement  Function Level Access Control\n     app.get(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.displayBenefits);\n     app.post(\"/benefits\", isLoggedIn, isAdmin, benefitsHandler.updateBenefits);\n     */\n\n    // Allocations Page\n    app.get(\"/allocations/:userId\", isLoggedIn, allocationsHandler.displayAllocations);\n\n    // Memos Page\n    app.get(\"/memos\", isLoggedIn, memosHandler.displayMemos);\n    app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "isLoggedIn"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 63,
+    "method": "GET",
+    "path": "/allocations/:userId",
+    "code": "app.get(\"/allocations/:userId\", isLoggedIn, allocationsHandler.displayAllocations);\n\n    // Memos Page\n    app.get(\"/memos\", isLoggedIn, memosHandler.displayMemos);\n    app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "isLoggedIn"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 66,
+    "method": "GET",
+    "path": "/memos",
+    "code": "app.get(\"/memos\", isLoggedIn, memosHandler.displayMemos);\n    app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "isLoggedIn"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 67,
+    "method": "POST",
+    "path": "/memos",
+    "code": "app.post(\"/memos\", isLoggedIn, memosHandler.addMemos);\n\n    // Handle redirect for learning resources link\n    app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });\n\n    // Research Page\n    app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "isLoggedIn"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 70,
+    "method": "GET",
+    "path": "/learn",
+    "code": "app.get(\"/learn\", isLoggedIn, (req, res) => {\n        // Insecure way to handle redirects by taking redirect url from query string\n        return res.redirect(req.query.url);\n    });",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "isLoggedIn"
+  },
+  {
+    "file": "app/routes/index.js",
+    "line": 76,
+    "method": "GET",
+    "path": "/research",
+    "code": "app.get(\"/research\", isLoggedIn, researchHandler.displayResearch);\n\n    // Mount tutorial router\n    app.use(\"/tutorial\", tutorialRouter);\n\n    // Error handling middleware\n    app.use(ErrorHandler);",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": "isLoggedIn"
+  },
+  {
+    "file": "app/routes/tutorial.js",
+    "line": 8,
+    "method": "GET",
+    "path": "/tutorial/",
+    "code": "router.get(\"/\", (req, res) => {\n    \"use strict\";\n    return res.render(\"tutorial/a1\", {\n        environmentalScripts\n    });\n});",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": ""
+  },
+  {
+    "file": "app/routes/tutorial.js",
+    "line": 31,
+    "method": "GET",
+    "path": "/tutorial/a1",
+    "code": "router.get(`/${page}`, (req, res) => {\n        \"use strict\";\n        return res.render(`tutorial/${page}`, {\n            environmentalScripts\n        });\n    });",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": ""
+  },
+  {
+    "file": "app/routes/tutorial.js",
+    "line": 31,
+    "method": "GET",
+    "path": "/tutorial/a2",
+    "code": "router.get(`/${page}`, (req, res) => {\n        \"use strict\";\n        return res.render(`tutorial/${page}`, {\n            environmentalScripts\n        });\n    });",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": ""
+  },
+  {
+    "file": "app/routes/tutorial.js",
+    "line": 31,
+    "method": "GET",
+    "path": "/tutorial/a3",
+    "code": "router.get(`/${page}`, (req, res) => {\n        \"use strict\";\n        return res.render(`tutorial/${page}`, {\n            environmentalScripts\n        });\n    });",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": ""
+  },
+  {
+    "file": "app/routes/tutorial.js",
+    "line": 31,
+    "method": "GET",
+    "path": "/tutorial/a4",
+    "code": "router.get(`/${page}`, (req, res) => {\n        \"use strict\";\n        return res.render(`tutorial/${page}`, {\n            environmentalScripts\n        });\n    });",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": ""
+  },
+  {
+    "file": "app/routes/tutorial.js",
+    "line": 31,
+    "method": "GET",
+    "path": "/tutorial/a5",
+    "code": "router.get(`/${page}`, (req, res) => {\n        \"use strict\";\n        return res.render(`tutorial/${page}`, {\n            environmentalScripts\n        });\n    });",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": ""
+  },
+  {
+    "file": "app/routes/tutorial.js",
+    "line": 31,
+    "method": "GET",
+    "path": "/tutorial/a6",
+    "code": "router.get(`/${page}`, (req, res) => {\n        \"use strict\";\n        return res.render(`tutorial/${page}`, {\n            environmentalScripts\n        });\n    });",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": ""
+  },
+  {
+    "file": "app/routes/tutorial.js",
+    "line": 31,
+    "method": "GET",
+    "path": "/tutorial/a7",
+    "code": "router.get(`/${page}`, (req, res) => {\n        \"use strict\";\n        return res.render(`tutorial/${page}`, {\n            environmentalScripts\n        });\n    });",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": ""
+  },
+  {
+    "file": "app/routes/tutorial.js",
+    "line": 31,
+    "method": "GET",
+    "path": "/tutorial/a8",
+    "code": "router.get(`/${page}`, (req, res) => {\n        \"use strict\";\n        return res.render(`tutorial/${page}`, {\n            environmentalScripts\n        });\n    });",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": ""
+  },
+  {
+    "file": "app/routes/tutorial.js",
+    "line": 31,
+    "method": "GET",
+    "path": "/tutorial/a9",
+    "code": "router.get(`/${page}`, (req, res) => {\n        \"use strict\";\n        return res.render(`tutorial/${page}`, {\n            environmentalScripts\n        });\n    });",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": ""
+  },
+  {
+    "file": "app/routes/tutorial.js",
+    "line": 31,
+    "method": "GET",
+    "path": "/tutorial/a10",
+    "code": "router.get(`/${page}`, (req, res) => {\n        \"use strict\";\n        return res.render(`tutorial/${page}`, {\n            environmentalScripts\n        });\n    });",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": ""
+  },
+  {
+    "file": "app/routes/tutorial.js",
+    "line": 31,
+    "method": "GET",
+    "path": "/tutorial/redos",
+    "code": "router.get(`/${page}`, (req, res) => {\n        \"use strict\";\n        return res.render(`tutorial/${page}`, {\n            environmentalScripts\n        });\n    });",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": ""
+  },
+  {
+    "file": "app/routes/tutorial.js",
+    "line": 31,
+    "method": "GET",
+    "path": "/tutorial/ssrf",
+    "code": "router.get(`/${page}`, (req, res) => {\n        \"use strict\";\n        return res.render(`tutorial/${page}`, {\n            environmentalScripts\n        });\n    });",
+    "language": "JavaScript",
+    "framework": "Express.js",
+    "function_name": ""
+  }
+]
