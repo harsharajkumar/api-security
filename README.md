@@ -17,84 +17,73 @@ Our approach separates vulnerability detection into four distinct, interoperable
 
 ## 🗺️ System Design
 
+### Overview
+
+```mermaid
+flowchart LR
+    A[GitHub URL\nor Local Path] --> B[Endpoint\nExtractor]
+    B --> C[AI Model\nCode Llama 7B]
+    B --> D[Rules\nChecker]
+    C --> E[Report\nGenerator]
+    D --> E
+    E --> F[HTML Report\n+ Security Score]
+```
+
+### Detailed Pipeline
+
 ```mermaid
 flowchart TD
-    subgraph INPUT["Input Sources"]
-        A1[GitHub URL]
-        A2[Local Path]
-    end
+    INPUT([GitHub URL / Local Path]) --> ENTRY
 
     subgraph ENTRY["Entry Points"]
-        B1[app.py\nStreamlit Dashboard]
-        B2[pipeline.py\nCLI Orchestrator]
+        B1[app.py — Streamlit Dashboard]
+        B2[pipeline.py — CLI]
     end
 
-    subgraph STAGE1["Stage 1 — Endpoint Extraction\nendpoint_extractor.py"]
-        C1[Git Clone / Local Walk]
-        C2[Pre-scan Phase\nCollect router & blueprint prefixes]
-        C3[Flask Extractor\n@app.route / @bp.route]
-        C4[FastAPI Extractor\n@router.get/post + multi-line decorators\nadd_api_route support]
-        C5[Django Extractor\nurlpatterns / router.register]
-        C6[Deduplicate\nby file+line+method]
-        C7[(endpoints.json)]
+    ENTRY --> STAGE1
+
+    subgraph STAGE1["Stage 1 — Endpoint Extraction"]
+        C1[Clone Repo & Walk Files]
+        C2[Flask / FastAPI / Django Extractors]
+        C3[(endpoints.json)]
+        C1 --> C2 --> C3
     end
 
-    subgraph STAGE2["Stage 2 — AI Inference\ninference.py"]
-        D1{Model Source}
-        D2[Local Checkpoint\nnotebooks/model_folder/checkpoint-531]
-        D3[HuggingFace Hub\nharsharajkumar273/api-security-qlora]
-        D4[Base Model\nCodeLlama-7b-instruct-hf]
-        D5[LoRA Adapter\nQLoRA 4-bit NF4]
-        D6[Build Prompt\nINST format with\nmethod + path + code]
-        D7[Model Generate\nmax 400 new tokens]
-        D8[Parse Response\nSeverity / Flaws / CWE\nDescription / Secure Version]
-        D9[(model_results.json)]
+    C3 --> STAGE2
+    C3 --> STAGE3
+
+    subgraph STAGE2["Stage 2 — AI Inference"]
+        D1[CodeLlama-7b + QLoRA Adapter]
+        D2[Build Prompt per Endpoint]
+        D3[Parse: Severity · CWE · Secure Fix]
+        D4[(model_results.json)]
+        D1 --> D2 --> D3 --> D4
     end
 
-    subgraph STAGE3["Stage 3 — Rules Checker\nrules_checker.py"]
-        E1[Load api_rules.jsonl\nFuzzy path matching]
-        E2[Static Pattern Matching\nSQL Injection · Command Injection\nPath Traversal · SSRF · IDOR\nInsecure JWT · Hardcoded Secret\nInsecure Deserialization · XSS]
-        E3[Config File Scanner\nsettings.py / config.py\nHardcoded secrets only]
-        E4[Custom Rule Engine\nMissing Auth · Missing Security Params]
-        E5[(rules_results.json)]
+    subgraph STAGE3["Stage 3 — Rules Checker"]
+        E1[Static Regex Patterns\nSQLi · SSRF · IDOR · Secrets · ...]
+        E2[Custom Rules\napi_rules.jsonl]
+        E3[Config File Scanner\nHardcoded secrets]
+        E4[(rules_results.json)]
+        E1 & E2 & E3 --> E4
     end
 
-    subgraph STAGE4["Stage 4 — Report Generator\nreport_generator.py"]
-        F1[Merge Model + Rules Results]
-        F2[Compute Security Score\nby severity weights]
-        F3[(report.html)]
+    D4 & E4 --> STAGE4
+
+    subgraph STAGE4["Stage 4 — Report"]
+        F1[Merge + Score]
+        F2[(report.html)]
+        F1 --> F2
     end
 
-    subgraph FINETUNE["Fine-Tuning Pipeline\nfinetune/"]
-        G1[(api_vulnerability_dataset_10k.json\n10,000 samples · 19 vuln types)]
-        G2[data.py\nDataset Prep & Normalization]
-        G3[finetune.py\nQLoRA Training\nrank=16 · alpha=32\ntarget: q/k/v/o_proj]
-        G4[API_Vuln_QLoRA_Colab_Fixed.ipynb\nGoogle Colab T4 GPU]
-        G5[merge_and_upload.py\nMerge LoRA → Base\nUpload to HF Hub]
-        G6[(harsharajkumar273/\napi-security-qlora\nHuggingFace Hub)]
+    subgraph FINETUNE["Fine-Tuning — offline"]
+        G1[(10k Vulnerability Dataset)]
+        G2[QLoRA Training\nColab T4 GPU]
+        G3[(HuggingFace Hub\napi-security-qlora)]
+        G1 --> G2 --> G3
     end
 
-    A1 & A2 --> B1 & B2
-    B1 & B2 --> C1
-    C1 --> C2
-    C2 --> C3 & C4 & C5
-    C3 & C4 & C5 --> C6 --> C7
-
-    C7 --> D6
-    D1 -->|exists locally| D2
-    D1 -->|fallback| D3
-    D2 & D3 --> D5
-    D4 --> D5
-    D5 --> D6 --> D7 --> D8 --> D9
-
-    C7 --> E1 & E2 & E3 & E4
-    E1 & E2 & E3 & E4 --> E5
-
-    D9 & E5 --> F1 --> F2 --> F3
-
-    G1 --> G2 --> G3
-    G4 --> G3 --> G5 --> G6
-    G6 -.->|adapter loaded at runtime| D3
+    G3 -.->|loaded at runtime| D1
 ```
 
 ---
